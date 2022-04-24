@@ -1,38 +1,74 @@
-.App {
-  text-align: center;
+body {
+    background: rgb(252,2,64);
+    background: linear-gradient(45deg, rgba(252,2,64,1) 0%, rgba(255,177,0,1) 100%);
+    font-family: "Poppins";
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.background {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(209, 213, 219, 0.3);
+
+    display: flex;
+    flex: 1;
+    border-radius: 10px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.latLonContainer {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    margin: 10px;
+    -webkit-box-shadow: 0px 0px 18px -6px #000000;
+    box-shadow: 0px 0px 10px -6px #000000;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.heroText {
+    font-weight: 600;
+    font-size: 2.4em;
+    margin: 10px 0;
 }
 
-.App-link {
-  color: #61dafb;
+.titleText {
+    font-size: 1.7em;
+    font-weight: bold;
+    margin: 5px 0px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.coordText {
+    font-size: 1.5em;
+    font-weight: normal;
+    margin: 5px 0;
+}
+
+.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+    border-color: black;
+}
+
+.MuiInputLabel-outlined {
+    color: white;
+}
+
+.MuiOutlinedInput-input {
+    color: black
+}
+
+@media (max-width: 640px) {
+    .heroText {
+        font-size: 2em;
+    }
+
+    .coordText {
+        font-size: 1.2em;
+    }
+
+    .titleText {
+        font-size: 1.3em;
+    }
 }
