@@ -1,19 +1,14 @@
 import {render, screen, fireEvent, within, waitFor, getAllByTestId} from '@testing-library/react';
-import App from './App';
+import App, {getDistanceBetweenTwoPoints} from './App';
 import React from "react";
+import {SnackbarProvider} from "notistack";
 
 it('renders without crashing', () => {
-    const mockGeolocation = {
-        getCurrentPosition: jest.fn(),
-        watchPosition: jest.fn()
-    };
-
-    global.navigator.geolocation = mockGeolocation;
-    render(<App/>);
+    render(<SnackbarProvider><App/></SnackbarProvider>);
 });
 
 test("renders all components", () => {
-    render(<App/>)
+    render(<SnackbarProvider><App/></SnackbarProvider>)
     expect(screen.getByText("Manual Coordinates")).toBeInTheDocument()
     expect(screen.getByText("Country")).toBeInTheDocument()
     expect(screen.getByText("Auto Latitude")).toBeInTheDocument()
@@ -24,7 +19,7 @@ test("renders all components", () => {
 })
 
 test("an input from the user is waited for before sending out a country identification query", async () => {
-    render(<App/>)
+    render(<SnackbarProvider><App/></SnackbarProvider>)
     expect(screen.getByText("Waiting for input")).toBeInTheDocument();
     expect(screen.getAllByText("Latitude")).toHaveLength( 2)
     expect(screen.getAllByText("Longitude")).toHaveLength( 2)
@@ -32,7 +27,7 @@ test("an input from the user is waited for before sending out a country identifi
 
 
 test("correct country is returned", async () => {
-    render(<App/>)
+    render(<SnackbarProvider><App/></SnackbarProvider>)
 
     const latitudeInput = screen.getByTestId("latitude-input")
     const longitudeInput = screen.getByTestId("longitude-input")
@@ -44,7 +39,7 @@ test("correct country is returned", async () => {
 })
 
 test("'locality' field from geocoding API is respected when the coordinates do not fall onto a country", async () => {
-    render(<App/>)
+    render(<SnackbarProvider><App/></SnackbarProvider>)
 
     const latitudeInput = screen.getByTestId("latitude-input")
     const longitudeInput = screen.getByTestId("longitude-input")
@@ -75,13 +70,66 @@ test("automatic location is detected correctly", async () => {
 
     global.navigator.geolocation = mockGeolocation;
 
-    render(<App/>)
+    render(<SnackbarProvider><App/></SnackbarProvider>)
 
     await waitFor(() => {
         expect(screen.getByText("10.543")).toBeInTheDocument();
         expect(screen.getByText("20.123")).toBeInTheDocument();
     })
 })
+
+
+test("distance to the North Pole is correctly calculated", async () => {
+    const mockGeolocation = {
+        getCurrentPosition: jest.fn().mockImplementation(success =>
+            Promise.resolve(success({
+                coords: {
+                    latitude: 10.543,
+                    longitude: 20.123
+                }
+            }))
+        )
+    };
+
+    global.navigator.geolocation = mockGeolocation;
+
+    render(<SnackbarProvider><App /></SnackbarProvider>)
+
+    const latitudeInput = screen.getByTestId("latitude-input")
+    const longitudeInput = screen.getByTestId("longitude-input")
+    const poleDistance = Math.round(getDistanceBetweenTwoPoints({
+        lat: 10.543,
+        lon: 20.123
+    }, {
+        lat: 90,
+        lon: 135
+    }))
+
+    fireEvent.change(latitudeInput, {target: {value: 10}})
+    fireEvent.change(longitudeInput, {target: {value: 20}})
+
+    await waitFor(() => {
+        expect(screen.getByText(`${poleDistance} km`)).toBeInTheDocument();
+    })
+})
+
+it("prompts an error when the given latitude and longitude values are out of bounds", async () => {
+    render(<SnackbarProvider><App/></SnackbarProvider>)
+
+    const latitudeInput = screen.getByTestId("latitude-input")
+    const longitudeInput = screen.getByTestId("longitude-input")
+
+    fireEvent.change(latitudeInput, {target: {value: 100}})
+
+    await waitFor(() => {
+        expect(screen.getByText("Should be between -90 and 90")).toBeInTheDocument();
+    })
+
+    fireEvent.change(longitudeInput, {target: {value: 181}})
+    await waitFor(() => {
+        expect(screen.getByText("Should be between -180 and 180")).toBeInTheDocument();
+    })
+  })
 
 test("check if country changes when new lat and long is entered", async () =>{
     render(<App/>)
