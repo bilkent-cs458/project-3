@@ -3,6 +3,35 @@ import './App.css';
 import {Box, CircularProgress, Container, FormControl, FormGroup, Grid, TextField} from "@mui/material"
 import * as SunCalc from "suncalc";
 import axios from "axios"
+import {useSnackbar} from "notistack";
+
+function getDistanceBetweenTwoPoints(cord1, cord2) {
+
+    if (cord1.lat == cord2.lat && cord1.lon == cord2.lon) {
+        return 0;
+    }
+
+    const radlat1 = (Math.PI * cord1.lat) / 180;
+    const radlat2 = (Math.PI * cord2.lat) / 180;
+
+    const theta = cord1.lon - cord2.lon;
+    const radtheta = (Math.PI * theta) / 180;
+
+    let dist =
+        Math.sin(radlat1) * Math.sin(radlat2) +
+        Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+
+    if (dist > 1) {
+        dist = 1;
+    }
+
+    dist = Math.acos(dist);
+    dist = (dist * 180) / Math.PI;
+    dist = dist * 60 * 1.1515;
+    dist = dist * 1.609344; //convert miles to km
+
+    return dist;
+}
 
 function App() {
 
@@ -30,6 +59,7 @@ function App() {
     const [distanceToNorthPole, setDistanceToNorthPole] = useState(-1);
     const [distanceToMoon, setDistanceToMoon] = useState(-1);
 
+    const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
     const handleChange = (event) => {
         setFormValues({
@@ -42,35 +72,6 @@ function App() {
         return `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}`
     }
 
-    function getDistanceBetweenTwoPoints(cord1, cord2) {
-
-        if (cord1.lat == cord2.lat && cord1.lon == cord2.lon) {
-            return 0;
-        }
-
-        const radlat1 = (Math.PI * cord1.lat) / 180;
-        const radlat2 = (Math.PI * cord2.lat) / 180;
-
-        const theta = cord1.lon - cord2.lon;
-        const radtheta = (Math.PI * theta) / 180;
-
-        let dist =
-            Math.sin(radlat1) * Math.sin(radlat2) +
-            Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
-
-        if (dist > 1) {
-            dist = 1;
-        }
-
-        dist = Math.acos(dist);
-        dist = (dist * 180) / Math.PI;
-        dist = dist * 60 * 1.1515;
-        dist = dist * 1.609344; //convert miles to km
-
-        console.log(dist)
-        return dist;
-    }
-
     useEffect(() => {
 
         navigator.geolocation.getCurrentPosition((position) => {
@@ -81,6 +82,10 @@ function App() {
             })
 
             setCoordsLoaded(true)
+        }, (error) => {
+            if (error.PERMISSION_DENIED) {
+                enqueueSnackbar("Location access has not been granted", {variant: "error"})
+            }
         })
 
     }, []);
@@ -188,7 +193,7 @@ function App() {
                                             margin={"normal"}
                                             variant={"outlined"}
                                             size={"small"}
-                                            inputProps={{ "data-testid": "latitude-input" }}
+                                            inputProps={{"data-testid": "latitude-input"}}
                                             label={"Latitude"}
                                             error={latitudeError.display}
                                             helperText={latitudeError.message}
@@ -204,7 +209,7 @@ function App() {
                                             margin={"normal"}
                                             variant={"outlined"}
                                             size={"small"}
-                                            inputProps={{ "data-testid": "longitude-input" }}
+                                            inputProps={{"data-testid": "longitude-input"}}
                                             label={"Longitude"}
                                             error={longitudeError.display}
                                             helperText={longitudeError.message}
@@ -232,7 +237,8 @@ function App() {
                                 geocodeResponse.length === 0 ?
                                     <p className={"coordText"}>Waiting for input</p>
                                     :
-                                    <p data-testiqd={"country-locality-p"} className={"coordText"}>{geocodeResponse.countryName ? geocodeResponse.countryName : geocodeResponse.locality }</p>
+                                    <p data-testiqd={"country-locality-p"}
+                                       className={"coordText"}>{geocodeResponse.countryName ? geocodeResponse.countryName : geocodeResponse.locality}</p>
                             }
                         </Box>
                     </Grid>
@@ -246,7 +252,8 @@ function App() {
                             <p className={"titleText"}>Auto Latitude</p>
                             {
                                 !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
-                                    <p className={"coordText"} data-testid={"auto-latitude"}>{autoLocation.latitude}</p>
+                                    <p className={"coordText"}
+                                       data-testid={"auto-latitude"}>{autoLocation.latitude}</p>
                             }
                         </Box>
 
@@ -260,7 +267,8 @@ function App() {
                             <p className={"titleText"}>Auto Longitude</p>
                             {
                                 !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
-                                    <p className={"coordText"} data-testid={"auto-longitude"}>{autoLocation.longitude}</p>
+                                    <p className={"coordText"}
+                                       data-testid={"auto-longitude"}>{autoLocation.longitude}</p>
                             }
                         </Box>
                     </Grid>
@@ -273,7 +281,8 @@ function App() {
                             <p className={"titleText"}>Distance to the North Pole</p>
                             {
                                 !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
-                                    <p className={"coordText"}>{distanceToNorthPole} km</p>
+                                    <p data-testid={"pole-distance"}
+                                       className={"coordText"}>{distanceToNorthPole} km</p>
                             }
                         </Box>
                     </Grid>
@@ -299,3 +308,4 @@ function App() {
 }
 
 export default App;
+export {getDistanceBetweenTwoPoints};
