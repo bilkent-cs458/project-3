@@ -1,4 +1,4 @@
-import {render, screen, fireEvent, within, waitFor} from '@testing-library/react';
+import {render, screen, fireEvent, within, waitFor, getAllByTestId} from '@testing-library/react';
 import App, {getDistanceBetweenTwoPoints} from './App';
 import React from "react";
 import {SnackbarProvider} from "notistack";
@@ -21,7 +21,10 @@ test("renders all components", () => {
 test("an input from the user is waited for before sending out a country identification query", async () => {
     render(<SnackbarProvider><App/></SnackbarProvider>)
     expect(screen.getByText("Waiting for input")).toBeInTheDocument();
+    expect(screen.getAllByText("Latitude")).toHaveLength( 2)
+    expect(screen.getAllByText("Longitude")).toHaveLength( 2)
 })
+
 
 test("correct country is returned", async () => {
     render(<SnackbarProvider><App/></SnackbarProvider>)
@@ -41,10 +44,16 @@ test("'locality' field from geocoding API is respected when the coordinates do n
     const latitudeInput = screen.getByTestId("latitude-input")
     const longitudeInput = screen.getByTestId("longitude-input")
 
-    fireEvent.change(latitudeInput, {target: {value: 2}})
-    fireEvent.change(longitudeInput, {target: {value: 54}})
 
-    await waitFor(() => expect(screen.getByText("Indian Ocean")).toBeInTheDocument())
+    fireEvent.change(latitudeInput, {target: {value: -100}})
+    fireEvent.change(longitudeInput, {target: {value: 200}})
+
+    const lat_err_msg = screen.getByText("Should be between -90 and 90")
+    const long_err_msg = screen.getByText("Should be between -180 and 180")
+
+    expect( lat_err_msg).not.toBeNull()
+    expect( long_err_msg).not.toBeNull()
+
 })
 
 test("automatic location is detected correctly", async () => {
@@ -68,6 +77,7 @@ test("automatic location is detected correctly", async () => {
         expect(screen.getByText("20.123")).toBeInTheDocument();
     })
 })
+
 
 test("distance to the North Pole is correctly calculated", async () => {
     const mockGeolocation = {
@@ -119,6 +129,26 @@ it("prompts an error when the given latitude and longitude values are out of bou
     await waitFor(() => {
         expect(screen.getByText("Should be between -180 and 180")).toBeInTheDocument();
     })
+  })
+
+test("check if country changes when new lat and long is entered", async () =>{
+    render(<App/>)
+
+    const latitudeInput = screen.getByTestId("latitude-input")
+    const longitudeInput = screen.getByTestId("longitude-input")
+
+    fireEvent.change(latitudeInput, {target: {value: 38 }})
+    fireEvent.change(longitudeInput, {target: {value: 35 }})
+
+
+    await waitFor( () => {
+        expect(screen.getByText("Turkey")).toBeInTheDocument()
+    })
+
+    fireEvent.change( latitudeInput, {target: {value: 10}})
+    fireEvent.change( longitudeInput, {target: {value: 20}})
+
+    expect(screen.getByTestId("country-locality-p")).toHaveTextContent("Chad")
 })
 
 
