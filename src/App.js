@@ -1,6 +1,6 @@
 import React, {useEffect, useState, Fragment} from "react";
 import './App.css';
-import {Box, CircularProgress, Container, FormControl, FormGroup, Grid, TextField} from "@mui/material"
+import {Box, CircularProgress, Container, FormControl, FormGroup, Grid, Switch, TextField} from "@mui/material"
 import * as SunCalc from "suncalc";
 import axios from "axios"
 import {useSnackbar} from "notistack";
@@ -58,6 +58,7 @@ function App() {
 
     const [distanceToNorthPole, setDistanceToNorthPole] = useState(-1);
     const [distanceToMoon, setDistanceToMoon] = useState(-1);
+    const [useAutoLocation, setUseAutoLocation] = useState(true);
 
     const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
@@ -66,6 +67,10 @@ function App() {
             ...formValues,
             [event.target.name]: event.target.value,
         });
+    };
+
+    const handleSwitchChange = (event) => {
+        setUseAutoLocation(event.target.checked);
     };
 
     function getGeocodeApiURL(lat, lon) {
@@ -232,12 +237,12 @@ function App() {
                         flexDirection: "column"
                     }}>
                         <Box className={"latLonContainer"}>
-                            <p className={"titleText"}>Country</p>
+                            <p className={"titleText"}>Country / Locality</p>
                             {
                                 geocodeResponse.length === 0 ?
                                     <p className={"coordText"}>Waiting for input</p>
                                     :
-                                    <p data-testiqd={"country-locality-p"}
+                                    <p data-testid={"country-locality-p"}
                                        className={"coordText"}>{geocodeResponse.countryName ? geocodeResponse.countryName : geocodeResponse.locality}</p>
                             }
                         </Box>
@@ -278,11 +283,32 @@ function App() {
                         flexDirection: "column"
                     }}>
                         <Box className={"latLonContainer"}>
+                            <p className={"titleText"}>Use Auto Coordinates</p>
+                            <Switch data-testid={"auto-coord-switch"} checked={useAutoLocation} onChange={handleSwitchChange} />
+                        </Box>
+                    </Grid>
+
+                    <Grid item xs={6} md={6} sx={{
+                        display: "flex",
+                        flexDirection: "column"
+                    }}>
+                        <Box className={"latLonContainer"}>
                             <p className={"titleText"}>Distance to the North Pole</p>
                             {
-                                !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
+                                useAutoLocation ?
+                                    !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
+                                        <p data-testid={"pole-distance"}
+                                           className={"coordText"}>{distanceToNorthPole} km</p>
+                                :
+                                    formValues.manual_longitude.length === 0 || formValues.manual_latitude.length === 0 ? <p className={"coordText"}>Waiting for input</p> :
                                     <p data-testid={"pole-distance"}
-                                       className={"coordText"}>{distanceToNorthPole} km</p>
+                                       className={"coordText"}>{Math.round(getDistanceBetweenTwoPoints({
+                                        lat: formValues.manual_latitude,
+                                        lon: formValues.manual_longitude
+                                    }, {
+                                        lat: 90,
+                                        lon: 135
+                                    }))} km</p>
                             }
                         </Box>
                     </Grid>
@@ -294,13 +320,15 @@ function App() {
                         <Box className={"latLonContainer"}>
                             <p className={"titleText"}>Distance to the Moon</p>
                             {
-                                !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
-                                    <p className={"coordText"}>{distanceToMoon} km</p>
+                                useAutoLocation ?
+                                    !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
+                                        <p className={"coordText"}>{distanceToMoon} km</p>
+                                :
+                                    formValues.manual_longitude.length === 0 || formValues.manual_latitude.length === 0 ? <p className={"coordText"}>Waiting for input</p> :
+                                    <p className={"coordText"}>{Math.round(SunCalc.getMoonPosition(new Date(), formValues.manual_latitude, formValues.manual_longitude).distance)} km</p>
                             }
                         </Box>
                     </Grid>
-
-
                 </Grid>
             </Box>
         </Container>
