@@ -9,9 +9,11 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
         <SnackbarProvider anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-        }}>
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    preventDuplicate={true}
+        >
             <App/>
         </SnackbarProvider>
     </React.StrictMode>

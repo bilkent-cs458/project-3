@@ -13,6 +13,17 @@ global.navigator.geolocation = mockGeolocation;
 global.navigator.permissions = {
     query: jest
         .fn()
-        .mockImplementationOnce(() => Promise.resolve({ state: 'granted' })),
+        .mockImplementation(() => Promise.resolve({ state: 'granted' })),
 };
+
+const mockEnqueue = jest.fn();
+
+jest.mock('notistack', () => ({
+    ...jest.requireActual('notistack'),
+    useSnackbar: () => {
+        return {
+            enqueueSnackbar: mockEnqueue
+        };
+    }
+}));
 

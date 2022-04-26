@@ -89,7 +89,7 @@ function App() {
             setCoordsLoaded(true)
         }, (error) => {
             if (error.PERMISSION_DENIED) {
-                enqueueSnackbar("Location access has not been granted", {variant: "error"})
+                enqueueSnackbar("Location access has not been granted", {variant: "error", persist: true})
             }
         })
 
@@ -141,6 +141,10 @@ function App() {
             axios.get(getGeocodeApiURL(formValues.manual_latitude, formValues.manual_longitude))
                 .then((response) => {
                     setGeocodeResponse(response.data)
+                })
+                .catch((err) => {
+                    console.log(err.response.data)
+                    console.log(formValues.manual_latitude, formValues.manual_longitude)
                 })
         }
 
@@ -284,7 +288,8 @@ function App() {
                     }}>
                         <Box className={"latLonContainer"}>
                             <p className={"titleText"}>Use Auto Coordinates</p>
-                            <Switch data-testid={"auto-coord-switch"} checked={useAutoLocation} onChange={handleSwitchChange} />
+                            <Switch data-testid={"auto-coord-switch"} checked={useAutoLocation}
+                                    onChange={handleSwitchChange}/>
                         </Box>
                     </Grid>
 
@@ -299,16 +304,17 @@ function App() {
                                     !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
                                         <p data-testid={"pole-distance"}
                                            className={"coordText"}>{distanceToNorthPole} km</p>
-                                :
-                                    formValues.manual_longitude.length === 0 || formValues.manual_latitude.length === 0 ? <p className={"coordText"}>Waiting for input</p> :
-                                    <p data-testid={"pole-distance"}
-                                       className={"coordText"}>{Math.round(getDistanceBetweenTwoPoints({
-                                        lat: formValues.manual_latitude,
-                                        lon: formValues.manual_longitude
-                                    }, {
-                                        lat: 90,
-                                        lon: 135
-                                    }))} km</p>
+                                    :
+                                    formValues.manual_longitude.length === 0 || formValues.manual_latitude.length === 0 ?
+                                        <p className={"coordText"}>Waiting for input</p> :
+                                        <p data-testid={"pole-distance"}
+                                           className={"coordText"}>{Math.round(getDistanceBetweenTwoPoints({
+                                            lat: formValues.manual_latitude,
+                                            lon: formValues.manual_longitude
+                                        }, {
+                                            lat: 90,
+                                            lon: 135
+                                        }))} km</p>
                             }
                         </Box>
                     </Grid>
@@ -323,9 +329,10 @@ function App() {
                                 useAutoLocation ?
                                     !coordsLoaded ? <CircularProgress size={35} style={{marginBottom: "10px"}}/> :
                                         <p className={"coordText"}>{distanceToMoon} km</p>
-                                :
-                                    formValues.manual_longitude.length === 0 || formValues.manual_latitude.length === 0 ? <p className={"coordText"}>Waiting for input</p> :
-                                    <p className={"coordText"}>{Math.round(SunCalc.getMoonPosition(new Date(), formValues.manual_latitude, formValues.manual_longitude).distance)} km</p>
+                                    :
+                                    formValues.manual_longitude.length === 0 || formValues.manual_latitude.length === 0 ?
+                                        <p className={"coordText"}>Waiting for input</p> :
+                                        <p className={"coordText"}>{Math.round(SunCalc.getMoonPosition(new Date(), formValues.manual_latitude, formValues.manual_longitude).distance)} km</p>
                             }
                         </Box>
                     </Grid>
